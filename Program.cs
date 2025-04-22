@@ -1,126 +1,53 @@
-﻿using System.Runtime.InteropServices;
-using Siniflar;
-
-// new kelimesini obje oluşturmak için kullanıyoruz
-// aşağıdaki örnekte obje oluşturken Kisi sınıfından bir örnek (instance) alıyoruz
-// işlemi tamamlamak için mutlaka parantez açıp kapatıyoruz
-var orhan = new Kisi();
-orhan.Ad = "Orhan"; // yeni oluşturduğumuz objenin yanına . (nokta) ekleyerek property'lerine
-// erişebiliriz
-orhan.Soyad = "Ekici";
-
-// Console.WriteLine($"{orhan.Ad} {orhan.Soyad}");
-
-var ozan = new Kisi
-{
-    Ad = "Ozan",
-    Soyad = "Alıcı",
-    Yas = 37,
-    Cinsiyet = "Erkek"
-};
-
-var ogrenciler = new List<Kisi>
-{
-    ozan, orhan
-};
-// ogrenciler.Add(ozan);
-// ogrenciler.Add(orhan);
-
-// foreach (var ogrenci in ogrenciler)
+﻿using Siniflar;
+//
+// var orhan = new Kisi();
+// orhan.Ad = "Orhan";
+// orhan.Soyad = "Ekici";
+// orhan.DogumYili = 2000;
+// var mesaj = orhan.KendiniTanit();
+// Console.WriteLine(mesaj);
+// Console.WriteLine(orhan.YasHesapla());
+//
+// var nihat = new Kisi
 // {
-//     Console.WriteLine(ogrenci.Ad);
-// }
+//     Ad = "Nihat",
+//     Soyad = "Duysak"
+// };
+//
+// Console.WriteLine(nihat.KendiniTanit());
 
-var urunler = new List<Urun>();
+// rezerve edilmiş kelimeler
+// reserved keywords
+// programlama dillerinde bazı kelimeler dil,
+// sistem veya framework tarafından daha önce kullanılmış
+// veya rezerve edilmiş olur
+// bu kelimeleri kod yazarken isim tanımlamak vb işler için
+// kullanamayız. kelimelerin kendi fonksiyonları için kullanırız.
 
-urunler.Add(new Urun
+int toplam = Yardimci.Topla(10, 20);
+Console.WriteLine(toplam);
+Console.WriteLine(Yardimci.Topla(30, 70));
+Console.WriteLine(Yardimci.Topla(29, 11));
+Console.WriteLine(Yardimci.Topla(29, 11));
+
+Console.WriteLine(Yardimci.Yil);
+// Yardimci.Yil = 2025;
+Console.WriteLine(Yardimci.YasHesapla(1989));
+
+bool resitMi = Yardimci.ResitlikKontroluYap(17);
+if (resitMi == true)
 {
-    Ad = "Çikolata",
-    Fiyat = 35,
-    Stok = 75,
-});
-
-urunler.Add(new Urun
+    Console.WriteLine("reşitmişin");
+}
+else
 {
-    Ad = "Kola",
-    Fiyat = 45,
-    Stok = 50,
-});
-
-urunler.Add(new Urun
-{
-    Ad = "Çekirdek",
-    Fiyat = 25,
-    Stok = 150,
-});
-
-int toplam = 0;
-double kdvliToplam = 0;
-int stokToplamFiyat = 0;
-
-foreach (var urun in urunler)
-{
-    double kdvDahilFiyat = urun.Fiyat * 1.2;
-    Console.WriteLine($"{urun.Ad} fiyat: {urun.Fiyat} kdvli fiyat: {kdvDahilFiyat} TL stok: {urun.Stok}");
-    toplam += urun.Fiyat;
-    kdvliToplam += kdvDahilFiyat;
-    stokToplamFiyat += urun.Fiyat * urun.Stok;
+    Console.WriteLine("boşver büyümee");
 }
 
-Console.WriteLine($"Toplam: {toplam}");
-Console.WriteLine($"Kdvli Toplam: {kdvliToplam}");
-Console.WriteLine($"Stok Toplam Fiyat: {stokToplamFiyat}");
+var hepsininToplami = Yardimci.TumunuTopla([5, 7, 28, 13]);
+Console.Write("Hepsinin toplamı: ");
+Console.WriteLine(hepsininToplami);
 
-while (true)
-{
-    Console.Clear();
-
-    Console.WriteLine("Hoşgeldiniz. Aşağıdan yapmak istediğiniz işlemi seçin.");
-    Console.WriteLine("1. Ürünleri listele");
-    Console.WriteLine("2. Yeni ürün ekle");
-    Console.Write("Seçiminiz: ");
-    var inputSecim = Console.ReadLine();
-
-    if (inputSecim == "1")
-    {
-        Console.Clear();
-
-        if (urunler.Count == 0)
-        {
-            Console.WriteLine("Listeleyecek ürün bulamadım.");
-        }
-
-        Console.WriteLine("ÜRÜN ADI FİYAT/STOK");
-        foreach (var urun in urunler)
-        {
-            Console.WriteLine($"{urun.Ad} {urun.Fiyat}/{urun.Stok}");
-        }
-
-        Console.WriteLine("\nDevam etmek için entera bas...");
-        Console.ReadLine();
-
-    } else if (inputSecim == "2")
-    {
-        Console.Clear();
-        Console.Write("Ürün adı: ");
-        var inputAd = Console.ReadLine();
-    
-        Console.Write("Ürün fiyatı: ");
-        var inputFiyat = int.Parse(Console.ReadLine());
-    
-        Console.Write("Ürün stok sayısı: ");
-        var inputStok = int.Parse(Console.ReadLine());
-    
-        urunler.Add(new Urun
-        {
-            Ad = inputAd,
-            Fiyat = inputFiyat,
-            Stok = inputStok,
-        });
-
-        Console.WriteLine("\nÜrün eklendi");
-        Console.WriteLine("\nDevam etmek için entera bas...");
-        Console.ReadLine();
-    }
-}
+var inputAd = Yardimci.SoruSor("Adın?");
+Console.WriteLine($"merhaba {inputAd}");
 
