@@ -1,0 +1,9 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+/.idea/.idea.LambdaExpressions/.idea/.gitignore
+/.idea/.idea.LambdaExpressions/.idea/encodings.xml
+/.idea/.idea.LambdaExpressions/.idea/indexLayout.xml
+/.idea/.idea.LambdaExpressions/.idea/vcs.xml
