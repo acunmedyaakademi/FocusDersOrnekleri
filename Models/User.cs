@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace ConsoleChatApp.Models;
 
+[Index(nameof(Username), IsUnique = true)]
 public class User
 {
     public int Id { get; set; }

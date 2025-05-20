@@ -10,6 +10,13 @@ class Program
 {
     static void Main(string[] args)
     {
+        User? loggedInUser = null;
+        
+        // kullanıcı giriş çıkış işlemleri
+        // kullanıcı kayıt
+        // mevcut giriş yapmış kullanıcı bulma, onunla işlem yapabilme
+        
+        
         // yeni kullanıcı kaydı
         Console.Write("Ad: ");
         var inputName = Console.ReadLine();
@@ -21,18 +28,45 @@ class Program
         var inputPass = Console.ReadLine();
         var hashedPassword = Hash(inputPass);
 
+        var db = new AppDbContext();
+        while (true)
+        {
+            var doesUserExist = db.Users.Any(u => u.Username == inputUsername);
+            if (!doesUserExist)
+            {
+                break;
+            }       
+            
+            Console.WriteLine("Bu kullanıcıdan var.");
+            Console.Write("Kullanıcı adı: ");
+            inputUsername = Console.ReadLine();
+        }
+     
+        
         var newUser = new User()
         {
             Name = inputName,
             Username = inputUsername,
             Password = hashedPassword
         };
-
-        var db = new AppDbContext();
         db.Users.Add(newUser);
         db.SaveChanges();
-
-        Console.WriteLine("Kullanıcı kaydı tamamlandı.");
+        
+        // try
+        // { 
+        //     
+        //     Console.WriteLine("Kullanıcı kaydı tamamlandı.");
+        // }
+        // catch (Exception e)
+        // {
+        //     // -2146233088
+        //     // -2146233079
+        //     // -2146232060
+        //     Console.WriteLine(e.HResult);
+        //     Console.WriteLine("Aynı isimde Başka kullanıcı var.");
+        // }
+        
+        // kullanıcı önce veritabanında arayıp, varsa bu kullanıcı var demek
 
         //Console.WriteLine(VerifyPassword(inputPass, hashedPassword));
         
