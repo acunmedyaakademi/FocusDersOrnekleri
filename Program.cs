@@ -1,5 +1,6 @@
 ﻿using ConsoleStudentManagement;
 using ConsoleStudentManagement.Data;
+using ConsoleStudentManagement.Models;
 using Microsoft.EntityFrameworkCore;
 
 //
@@ -9,85 +10,64 @@ using Microsoft.EntityFrameworkCore;
 // Console.Clear();
 var db = new AppDbContext();
 
-// var classroomList = db
-//         .Classrooms
-//         .Include(s => s.Students)
-//     .ToList();
-//
-// foreach (var classroom in classroomList)
+
+
+// one to many
+// student -> todos
+// öğrencilerin todoları var
+// her bir todo, spesifik olarak bir öğrenciye ait
+
+// kullanıcı arayüzden bir id girecekse aşağıdaki yapıyı kullanmak en mantıklısı
+// fakat ilgili öğrencinin aynı zamanda ilişkili verilerini de okumak istiyorsak
+// find yerine single veya first kullanmamız lazım. böylelikle include yapabiliriz.
+// var inputStudentId = 7;
+// var student = db.Students.Include(t => t.Todos).FirstOrDefault(s => s.Id == inputStudentId);
+// if (student == null) // defansif kod
 // {
-//     Console.WriteLine($"{classroom.Id} {classroom.Name}");
-//     foreach (var student in classroom.Students)
-//     {
-//         Console.WriteLine($"\t{student.Id} {student.FirstName} {student.LastName}");
-//     }
-//     Console.WriteLine();
+//     // eğer öğrencimiz yoksa burada akışı kesmeliyiz.
+//     return; // void olsa bile return işe yarar
+//     // fakat eğer tip varsa, mutlaka bizim o tipe uygun bir dönüş yapmamız lazım.
 // }
 
-var studentList = db.Students
-    .Include(c => c.Classrooms)
-    .Include(t => t.Todos)
+// Console.WriteLine(student.Todos.Count);
+
+// var newTodo = new Todo { Task = "Bir başka todo" };
+// student.Todos.Add(newTodo);
+// Console.WriteLine(newTodo.StudentId);
+// Console.WriteLine(newTodo.Id);
+// db.SaveChanges();
+// Console.WriteLine(newTodo.StudentId);
+// Console.WriteLine(newTodo.Id);
+
+// Console.WriteLine($"Todo Sayısı: {student.Todos.Where(t => t.Completed).Count()}/{student.Todos.Count}");
+//
+// foreach (var todo in  student.Todos)
+// {
+//     Console.WriteLine($"{todo.Task} - {(todo.Completed ? "Tamamlandı" : "Tamamlanmadı")}");
+// }
+
+
+var todos = db.Todos
+    .Include(s => s.Student)
+        .ThenInclude(c => c.Classrooms) // bu öğrencinin içindekini include ediyor. yani öğrencinin classroom bilgisi
     .ToList();
 
-var todos = db.Todos.Where(t => t.StudentId == 7).ToList();
-
-foreach (var student in studentList)
+foreach (var todo in todos)
 {
-    Console.WriteLine($"Ad: {student.FirstName} {student.LastName}");
-    var studentClassrooms = student.Classrooms.Select(x => x.Name);
-    // şekilli kod yazma
-    // kısa yazayım
-    
-    // bizim her zaman önceliğimiz kolay okunabilir kod yazmak
-    if (studentClassrooms.Count() > 0)
+    string classroomsOfStudent;
+    if (todo.Student.Classrooms.Count > 0)
     {
-        Console.WriteLine($"Sınıfları: {string.Join(", " ,studentClassrooms)}");
+        classroomsOfStudent = string.Join(", ", todo.Student.Classrooms.Select(c => c.Name));
     }
     else
     {
-        Console.WriteLine("Henüz sınıf ataması yapılmamış.");        
+        classroomsOfStudent = "Henüz sınıfa atanmadı.";
     }
-    Console.WriteLine();
+    
+    var studentFullName = $"{todo.Student.FirstName} {todo.Student.LastName} ({classroomsOfStudent})";
+    
+    Console.WriteLine($"{(todo.Completed ? "[X]" : "[ ]")} {todo.Task} - {studentFullName}");
 }
 
-return;
-
-Console.WriteLine("Tüm Öğrenciler\n".ToUpper());
-// DbHelper.ListAllStudents();
-var students = db.Students.ToList();
-foreach (var student in students)
-{
-    Console.WriteLine($"{student.Id} {student.FirstName} {student.LastName}");
-}
-
-Console.WriteLine();
-
-Console.WriteLine("Tüm Sınıflar\n".ToUpper());
-var classrooms = db.Classrooms.ToList();
-foreach (var classroom in classrooms)
-{
-    Console.WriteLine($"{classroom.Id} {classroom.Name} ");
-}
-
-Console.Write("İşlem yapmak istediğin öğrenci: ");
-var studentId = int.Parse(Console.ReadLine());
-
-Console.Write("Öğrenciyi eklemek istediğin sınıf: ");
-var classroomId = int.Parse(Console.ReadLine());
-
-// eğer ilişki olan kayıtlarla iş yapmayacaksak o zaman find çok hızlı çalışır ve find ile ilerleyebiliriz
-// ama ilişkiler üzerinde işlem yapılacaksa o zaman include kullanabileceğimiz bir yapıya ihtiyacımız var.
-var foundStudent = db.Students
-                .Include(c => c.Classrooms) // öğrencilerle ilişkili classroom verilerini de veritabanından çek
-                .FirstOrDefault(s => s.Id == studentId);
-var foundClassroom = db.Classrooms.Find(classroomId);
-
-foundStudent.Classrooms.Add(foundClassroom);
-
-// yaptığımız işlemleri her zaman en sonda veritabanına kaydetmeliyiz
-db.SaveChanges();
-
-// ilişki kurduğumuz verilerle işlem yapmadan önce mutlaka include yapmamız gerekiyor
-// Console.WriteLine(foundStudent.Classrooms.Count);
 
 
