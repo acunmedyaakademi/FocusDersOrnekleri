@@ -124,8 +124,8 @@ public static class Helper
                 Console.Write("\b \b");
                 continue;
             }
-            
-            if (!IsSecurePassChar(key.KeyChar))
+
+            if (!IsSecurePassChar(key.KeyChar) || char.IsControl(key.KeyChar))
             {
                 continue;
             }

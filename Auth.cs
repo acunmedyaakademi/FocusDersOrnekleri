@@ -1,10 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
+using ConsoleChatApp.Data;
 using ConsoleChatApp.Models;
 
 namespace ConsoleChatApp;
 
-public class Auth
+public static class Auth
 {
     // login
     // kullanıcı adı veya şifre hatalı
@@ -15,6 +16,7 @@ public class Auth
     // yeni kullanıcı kaydı
     // bu kullanıcı zaten kayıtlı, şifreni mi unuttun?
     // bu isimde kullanıcı kayıtlı
+    private static readonly AppDbContext _context = new AppDbContext();
 
     public enum LoginStatus
     {
@@ -25,11 +27,23 @@ public class Auth
     // enumların karşılığında veritabanında bir değer tutmuyorsak
     // o zaman olduğu gibi bırakabiliriz
 
-    public static LoginStatus Login(string username, string password, out User? user)
+    public static LoginStatus Login(string username, string password, out User? loggedInUser)
     {
-        user = null;
+        loggedInUser = null;
+        var user = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (user == null)
+        {
+            return LoginStatus.UserNotFound;
+        }
+
+        if (user.Password != Hash(password))
+        {
+            return LoginStatus.WrongCredentials;
+        }
         
-        return LoginStatus.WrongCredentials;
+        loggedInUser = user;
+        
+        return LoginStatus.LoggedIn;
     }
     
     private static string Hash(string rawData)
