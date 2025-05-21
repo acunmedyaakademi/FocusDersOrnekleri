@@ -9,6 +9,6 @@ public class AppDbContext : DbContext
     
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        options.UseSqlServer("Server=159.253.37.34\\MSSQLSERVER2019;Database=akadem67_chat;User Id=akadem67_chatuser;Password=o?5Nn76j6;TrustServerCertificate=True;");
+        options.UseSqlServer("Server=159.253.37.34\\MSSQLSERVER2019;Database=akadem67_chat;User Id=akadem67_chatuser;Password=kl427Gg*2;TrustServerCertificate=True;");
     }
 }

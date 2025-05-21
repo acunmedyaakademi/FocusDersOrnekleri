@@ -3,55 +3,64 @@ using System.Text;
 using ConsoleChatApp.Data;
 using ConsoleChatApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Logging;
 
 namespace ConsoleChatApp;
 
 class Program
 {
+    private static User? _loggedInUser = null;
+    
     static void Main(string[] args)
     {
-        User? loggedInUser = null;
+        var mainMenu = new ConsoleMenu("Console Chat Uygulaması", true);
+        mainMenu
+            .AddMenu("Giriş Yap", LoginUser)
+            .AddOption("Kayıt Ol", () => Console.WriteLine("Silme"));
+
+        mainMenu.Show();
         
+        #region sonra bakıcaz
+
         // kullanıcı giriş çıkış işlemleri
         // kullanıcı kayıt
         // mevcut giriş yapmış kullanıcı bulma, onunla işlem yapabilme
-        
-        
+        // kullanıcıadı|şifre|geçerlilik zamanı
         // yeni kullanıcı kaydı
-        Console.Write("Ad: ");
-        var inputName = Console.ReadLine();
-        
-        Console.Write("Kullanıcı adı: ");
-        var inputUsername = Console.ReadLine();
-        
-        Console.Write("Şifre: ");
-        var inputPass = Console.ReadLine();
-        var hashedPassword = Hash(inputPass);
+        // Console.Write("Ad: ");
+        // var inputName = Console.ReadLine();
+        //
+        // Console.Write("Kullanıcı adı: ");
+        // var inputUsername = Console.ReadLine();
+        //
+        // Console.Write("Şifre: ");
+        // var inputPass = Console.ReadLine();
+        // var hashedPassword = Hash(inputPass);
+        //
+        // var db = new AppDbContext();
+        // while (true)
+        // {
+        //     var doesUserExist = db.Users.Any(u => u.Username == inputUsername);
+        //     if (!doesUserExist)
+        //     {
+        //         break;
+        //     }       
+        //     
+        //     Console.WriteLine("Bu kullanıcıdan var.");
+        //     Console.Write("Kullanıcı adı: ");
+        //     inputUsername = Console.ReadLine();
+        // }
+        //
+        //
+        // var newUser = new User()
+        // {
+        //     Name = inputName,
+        //     Username = inputUsername,
+        //     Password = hashedPassword
+        // };
+        // db.Users.Add(newUser);
+        // db.SaveChanges();
 
-        var db = new AppDbContext();
-        while (true)
-        {
-            var doesUserExist = db.Users.Any(u => u.Username == inputUsername);
-            if (!doesUserExist)
-            {
-                break;
-            }       
-            
-            Console.WriteLine("Bu kullanıcıdan var.");
-            Console.Write("Kullanıcı adı: ");
-            inputUsername = Console.ReadLine();
-        }
-     
-        
-        var newUser = new User()
-        {
-            Name = inputName,
-            Username = inputUsername,
-            Password = hashedPassword
-        };
-        db.Users.Add(newUser);
-        db.SaveChanges();
-        
         // try
         // { 
         //     
@@ -65,11 +74,11 @@ class Program
         //     Console.WriteLine(e.HResult);
         //     Console.WriteLine("Aynı isimde Başka kullanıcı var.");
         // }
-        
+
         // kullanıcı önce veritabanında arayıp, varsa bu kullanıcı var demek
 
         //Console.WriteLine(VerifyPassword(inputPass, hashedPassword));
-        
+
         // var inputUserName = "orhanekici";
         // var inputUserpass = "123123";
         // kontrolü uygulamada yapar
@@ -78,67 +87,56 @@ class Program
         // {
         //     // merhaba kullanıcı
         // }
-        
+
         // kontrolü veritabanında yapar
         // var user = db.Users.FirstOrDefault(u => u.Username == inputUserName && u.Password == Hash(inputUserpass));
         // if (user != null)
         // {
         //     // merhaba kullanıcı
         // }
-        
+
         // kontrolü uygulamada yaparsak;
         // önce ilgili kullanıcıyı veritabanından çekip, şifre doğru mu diye uygulama üzerinde kontrol yaparız
-        
+
         // kontrolü veritabanında yaparsak;
         // veritabanına hem kullanıcı adı hem de şifre gönderip, uyan kullanıcı varsa o zaman o kullanıcı çekeriz
-        
-        // iki durumda da tekrar şifreleme için işlem yapmamız gerekir
-        
-    }
-    
-    static string Hash(string rawData)
-    {
-        using (SHA256 sha256Hash = SHA256.Create())
-        {
-            // Girdiyi byte dizisine çevir
-            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
 
-            // Byte dizisini hex string'e çevir
-            StringBuilder builder = new StringBuilder();
-            foreach (byte b in bytes)
-            {
-                builder.Append(b.ToString("x2")); // "x2" => 2 karakterlik hex
-            }
-            return builder.ToString();
+        // iki durumda da tekrar şifreleme için işlem yapmamız gerekir
+
+        #endregion
+    }
+
+    static void LoggedInUserMenu()
+    {
+        var userMenu = new ConsoleMenu("Kullanıcı Menüsü");
+        userMenu
+            .AddOption("Rumuz belirle", () => Console.WriteLine("Rumuzun nedir?"))
+            .AddOption("Oda ara", () => Console.WriteLine("Oda ara"))
+            .AddOption("Oda oluştur", () => Console.WriteLine("Oda oluştur"));
+        
+        userMenu.Show();
+    }
+
+    static void LoginUser()
+    {
+        var inputUsername = Helper.Ask("Kullanıcı adı", true);
+        var inputPassword = Helper.AskPassword("Şifre");
+        var loginStatus = Auth.Login(inputUsername, inputPassword, out var user);
+        switch (loginStatus)
+        {
+            case Auth.LoginStatus.LoggedIn:
+                _loggedInUser = user; // login olan kullanıcıyı genel olarak erişebileceğim bir yere göndermem lazım
+                LoggedInUserMenu(); // giriş yapıldıktan sonra göstermem gereken menüyü göstercem
+                break;
+            case Auth.LoginStatus.UserNotFound:
+                    Helper.ShowErrorMsg("Kullanıcın bulunamadı!");
+                    Thread.Sleep(1000);
+                break;
+            case Auth.LoginStatus.WrongCredentials:
+                    Helper.ShowErrorMsg("Eksik veya hatalı giriş yaptın!");
+                    Thread.Sleep(1000);
+                break;
         }
     }
-    
-    // public static string HashPassword(string password)
-    // {
-    //     int iterations = 100_000;
-    //     byte[] salt = RandomNumberGenerator.GetBytes(16); // 16 byte rastgele salt
-    //
-    //     using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA512);
-    //     byte[] hash = pbkdf2.GetBytes(64); // SHA-512 çıktısı = 64 byte
-    //
-    //     // Salt + Hash'ı Base64 formatında birleştirip sakla
-    //     return $"{Convert.ToBase64String(salt)}:{Convert.ToBase64String(hash)}:{iterations}";
-    // }
-    //
-    // public static bool VerifyPassword(string password, string storedHash)
-    // {
-    //     var parts = storedHash.Split(':');
-    //     if (parts.Length != 3)
-    //         return false;
-    //
-    //     byte[] salt = Convert.FromBase64String(parts[0]);
-    //     byte[] expectedHash = Convert.FromBase64String(parts[1]);
-    //     int iterations = int.Parse(parts[2]);
-    //
-    //     using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA512);
-    //     byte[] actualHash = pbkdf2.GetBytes(64);
-    //
-    //     return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
-    // }
     
 }
