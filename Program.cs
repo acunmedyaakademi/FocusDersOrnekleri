@@ -1,22 +1,25 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using ConsoleChatApp.Data;
+﻿using ConsoleChatApp.Data;
 using ConsoleChatApp.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Logging;
 
 namespace ConsoleChatApp;
 
 class Program
 {
-    private static User? _loggedInUser = null;
+    private static User? _loggedInUser;
+    private static ConsoleMenu _userMenu = new("Kullanıcı Menüsü");
+    private static AppDbContext _context = new AppDbContext();
     
-    static void Main(string[] args)
+    static void Main()
     {
+        _userMenu
+            .AddMenu("Mesajları izle", () => ReadMessages())
+            .AddMenu("Mesaj gönder", SendMessage);
+        
         var mainMenu = new ConsoleMenu("Console Chat Uygulaması", true);
         mainMenu
             .AddMenu("Giriş Yap", LoginUser)
-            .AddOption("Kayıt Ol", () => Console.WriteLine("Silme"));
+            .AddMenu("Kayıt Ol", RegisterUser);
 
         mainMenu.Show();
         
@@ -106,27 +109,101 @@ class Program
         #endregion
     }
 
-    static void LoggedInUserMenu()
+    static void SendMessage()
     {
-        var userMenu = new ConsoleMenu("Kullanıcı Menüsü");
-        userMenu
-            .AddOption("Rumuz belirle", () => Console.WriteLine("Rumuzun nedir?"))
-            .AddOption("Oda ara", () => Console.WriteLine("Oda ara"))
-            .AddOption("Oda oluştur", () => Console.WriteLine("Oda oluştur"));
+        Helper.ShowInfoMsg("Çıkış için boş mesaj gönderin");
+        while (true)
+        {
+            var inputMsg = Helper.Ask("Mesaj");
+            if (string.IsNullOrEmpty(inputMsg))
+            {
+                break;
+            }
+            _context.Messages.Add(new Message
+            {
+                Content = inputMsg,
+                SenderId = _loggedInUser!.Id
+            });
+            _context.SaveChanges();
+        }
+    }
+
+    static async Task ReadMessages()
+    {
+        // lokal fonksiyon
+        // method içindeki iş akışımızı sadeleştirmek ve daha yönetilebilir hale getirmek için
+        // async olayının bununla alakası yok
+        async Task StreamMessages()
+        {
+            var lastMessageId = 0;
+            while (true)
+            {
+                _context.Messages
+                    .Where(m => m.Id > lastMessageId)
+                    .Include(s => s.Sender).ToList()
+                    .ForEach(m =>
+                    {
+                        string msg;
+                
+                        if (m.Sender.Id == _loggedInUser!.Id)
+                        {
+                            msg = $"{m.Content} - {m.Sender.Name}".PadLeft(Console.WindowWidth);
+                        }
+                        else
+                        {
+                            msg = $"{m.Sender.Name} - {m.Content}";
+                        }
+                
+                        lastMessageId = m.Id;
+                        Console.WriteLine(msg);
+                    
+                    });
+                await Task.Delay(200);
+            }
+        }
+
+        async Task CheckForExit()
+        { 
+            Console.ReadKey(true);
+        }
+
+        await Task.WhenAny(StreamMessages(), CheckForExit());
+    }
+    
+    static void RegisterUser()
+    {
+        var inputName = Helper.Ask("Ad", true);
+        var inputUsername = Helper.Ask("Kullanıcı adı", true);
+        var inputPassword = Helper.AskPassword("Şifre");
+        var registerStatus = Auth.Register(inputName!, inputUsername!, inputPassword, out var user);
+
+        if (registerStatus == Auth.RegisterStatus.UsernameExists)
+        {
+            Helper.ShowErrorMsg("Bu kullanıcı zaten var!");
+            Thread.Sleep(1000);
+            return;
+        }
         
-        userMenu.Show();
+        Helper.ShowSuccessMsg("Kaydın yapıldı");
+        Thread.Sleep(1000);
+        _loggedInUser = user;
+        //LoggedInUserMenu(); // TODO: bunu daha mantıklı formata getirelim
+        _userMenu.Show();
     }
 
     static void LoginUser()
     {
+        // chat odasını izle
+        // chat odasına mesaj gönder -> mesaj gönderin
+        
         var inputUsername = Helper.Ask("Kullanıcı adı", true);
         var inputPassword = Helper.AskPassword("Şifre");
-        var loginStatus = Auth.Login(inputUsername, inputPassword, out var user);
+        var loginStatus = Auth.Login(inputUsername!, inputPassword, out var user);
         switch (loginStatus)
         {
             case Auth.LoginStatus.LoggedIn:
                 _loggedInUser = user; // login olan kullanıcıyı genel olarak erişebileceğim bir yere göndermem lazım
-                LoggedInUserMenu(); // giriş yapıldıktan sonra göstermem gereken menüyü göstercem
+                _userMenu.Show();
                 break;
             case Auth.LoginStatus.UserNotFound:
                     Helper.ShowErrorMsg("Kullanıcın bulunamadı!");

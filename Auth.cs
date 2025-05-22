@@ -26,6 +26,12 @@ public static class Auth
     }
     // enumların karşılığında veritabanında bir değer tutmuyorsak
     // o zaman olduğu gibi bırakabiliriz
+    
+    public enum RegisterStatus
+    {
+        Successful,
+        UsernameExists
+    }
 
     public static LoginStatus Login(string username, string password, out User? loggedInUser)
     {
@@ -44,6 +50,31 @@ public static class Auth
         loggedInUser = user;
         
         return LoginStatus.LoggedIn;
+    }
+
+    public static RegisterStatus Register(string name, string username, string password, out User? loggedInUser)
+    {
+        loggedInUser = null;
+        
+        var doesUserExist = _context.Users.Any(u => u.Username == username);
+        if (doesUserExist)
+        {
+            return RegisterStatus.UsernameExists;
+        }
+
+        var user = new User
+        {
+            Name = name,
+            Username = username,
+            Password = Hash(password)
+        };
+        
+        _context.Users.Add(user);
+        _context.SaveChanges();
+        
+        loggedInUser = user;
+
+        return RegisterStatus.Successful;
     }
     
     private static string Hash(string rawData)
